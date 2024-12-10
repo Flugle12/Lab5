@@ -6,9 +6,6 @@
 
     public CustomDate(string date)
     {
-        // Разделяем строку даты по точке
-        //var parts = date.Split(' ');
-
         
         var parts = date.Split(' ')[0].Split('.');
         if (parts.Length != 3)
