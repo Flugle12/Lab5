@@ -30,7 +30,7 @@
 
     public override string ToString()
     {
-        return $"{Day}.{Month}.{Year}";
+        return $"{Day:D2}.{Month:D2}.{Year}";
     }
 }
 

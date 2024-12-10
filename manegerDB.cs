@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.Design;
+﻿using Aspose.Cells;
+using Aspose.Cells.Charts;
+using System.ComponentModel.Design;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -6,16 +8,18 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class manegerBD
 {
+    private Logger logger;
     private string PathToXlsFile;
     private BD hotel;
 
-    public manegerBD(string path)
+    public manegerBD(string path, Logger logger)
     {
         PathToXlsFile = path;
+        this.logger = logger;
         hotel = new BD(PathToXlsFile);
     }
 
-    public void OutputBD()
+    public void OutputBD() // вывод БД
     {
         string chare = new string('_', 120);
         Console.WriteLine("Таблица - Клиенты:");
@@ -45,9 +49,10 @@ public class manegerBD
             Console.WriteLine(reserv.ToString());
         }
         Console.WriteLine();
-    }
+        logger.Log("БД выведена");
+    }  
 
-    public void CorrectionElement()
+    public void CorrectionElement() // Корректировка элементов БД 
     {
         Console.WriteLine("Введите номер таблицы корректировки: ");
         Console.WriteLine("1. Клиенты");
@@ -56,7 +61,7 @@ public class manegerBD
         string ch = Console.ReadLine();
 
         Console.WriteLine("Введите ключ элемента который хотите изменить");
-        if (uint.TryParse(ch, out uint key))
+        if (uint.TryParse(Console.ReadLine(), out uint key))
         {
             switch (ch)
             {
@@ -70,7 +75,7 @@ public class manegerBD
                     CorrectionElementsReservation(key);
                     break;
                 default:
-                    Console.WriteLine();
+                    Console.WriteLine("asdasd");
                     break;
             }
         }
@@ -81,7 +86,7 @@ public class manegerBD
        
     }
 
-    public void AddElement()
+    public void AddElement() // добавление элементов БД
     {
         Console.WriteLine("ВВедите номер таблицы для добавления");
         Console.WriteLine("1. Клиенты");
@@ -106,7 +111,7 @@ public class manegerBD
         }
     }
 
-    public void DeleteElement()
+    public void DeleteElement() // удаление элементов БД
     {
         Console.WriteLine("Введите номер таблицы из которой хотите удалить");
         Console.WriteLine("1. Клиенты");
@@ -137,9 +142,11 @@ public class manegerBD
         }
     }
 
+    // вспомогательные методы для публичных методов выше
     private void DeleteElementFromReservation(uint key)
     {
         var deleteReservation = hotel.reservation.FirstOrDefault(b => b.id == key);
+        logger.Log($"Удалена запись из таблицы Бронирование: {deleteReservation.ToString()}");
         if (deleteReservation != null)
         {
             var deleteNumbers = hotel.numbers.FirstOrDefault(n => n._id == deleteReservation.numbersId);
@@ -149,11 +156,16 @@ public class manegerBD
             hotel.numbers.Remove(deleteNumbers);
             hotel.clients.Remove(deleteClients);
         }
+        else
+        {
+            Console.WriteLine("такого элементта не существует");
+        }
     }
 
     private void DeleteElementFromClients(uint clientsKey)
     {
         var deleteClients = hotel.clients.FirstOrDefault(c => c._id == clientsKey);
+        logger.Log($"Удалена запись из таблицы Клиенты: {deleteClients.ToString()}");
         if (deleteClients != null)
         {
             var deleteReservation = hotel.reservation.FirstOrDefault(r => r.clientsId == deleteClients._id);
@@ -168,6 +180,7 @@ public class manegerBD
     private void DeleteElementFromNumbers(uint numberKey)
     {
         var deleteNumbers = hotel.numbers.FirstOrDefault(n => n._id == numberKey);
+        logger.Log($"Удалена запись из таблицы Номера: {deleteNumbers.ToString()}");
         if (deleteNumbers != null)
         {
             var deleteReservation = hotel.reservation.FirstOrDefault(r => r.numbersId == numberKey);
@@ -177,6 +190,7 @@ public class manegerBD
             hotel.numbers.Remove(deleteNumbers);
             hotel.clients.Remove(deleteClients);
         }
+        
     }
 
     private void CorrectionElementsClients(uint key)
@@ -202,6 +216,7 @@ public class manegerBD
         Console.WriteLine("Введите новый адрес");
         string newAdress = Console.ReadLine();
         if (!string.IsNullOrEmpty(newAdress)) client._adres = newAdress;
+        logger.Log($"изменена запись в таблице Клиенты измененная запись: {client.ToString()}");
     }
 
     private void CorrectionElementsNumbers(uint key)
@@ -227,6 +242,7 @@ public class manegerBD
         Console.WriteLine("ВВедите новую категорию номера: ");
         string newCtegory = Console.ReadLine();
         if (ushort.TryParse(newCtegory, out ushort newCtegoryInput)) number._category = newCtegoryInput;
+        logger.Log($"изменена запись в таблице Номера измененная запись: {number.ToString()}");
     }
 
     private void CorrectionElementsReservation(uint key)
@@ -254,7 +270,7 @@ public class manegerBD
         {
             reservation.departureDate = new CustomDate(newDepartureData);
         }
-
+        logger.Log($"изменена запись в таблице Резервация измененная запись: {reservation.ToString()}");
     }
 
     private void AddClients()
@@ -277,6 +293,7 @@ public class manegerBD
 
             hotel.clients.Add(new Сlients(hotel.clients.Max(c => c._id) + 1, newSecName, newfirstName, newPatr, newAdress));
         }
+        logger.Log($"Добавлена новая запись в таблицу клиенты с полями {newSecName}, {newfirstName}, {newPatr}, {newAdress}");
     }
 
     private void AddNumber()
@@ -297,6 +314,7 @@ public class manegerBD
         {
             hotel.numbers.Add(new Numbers(hotel.numbers.Max(c => c._id) + 1, NewFloorOutput, NewPlaceOutput, NewPlaceOutput, newCategoryOutput));
         }
+        logger.Log($"Добавлена новая запись в таблицу номера с полями {newFloor}, {newPlace}, {newPrice}, {newCtegory}");
     }
 
     private void AddReservation()
@@ -321,11 +339,50 @@ public class manegerBD
                 new CustomDate(newDepartureData))
                 );
         }
+        logger.Log($"Добавлена новая запись в таблицу Бронирование и зависимости с полями {newReservationDate}, {newReservationChekInDate}, {newDepartureData}");
         AddClients();
         AddNumber();
     }
 
-    public void GetRevenueForCity(string city)
+    //запросы
+    public void GetTotalClients()
+    {
+        Console.WriteLine(hotel.clients.Count());
+    }
+    public void GetReservedNumbers()
+    {
+        
+        var reservedNumbers = hotel.reservation
+            .Select(r => hotel.numbers.FirstOrDefault(n => n._id == r.numbersId)?._id)
+            .Where(n => n != null)
+            .ToList();
+
+        foreach (var reservedNumber in reservedNumbers)
+        {
+            Console.Write(reservedNumber + " ");
+        }
+    }
+
+    public void GetClientsWithReservation()
+    {
+        var clientsWithReservation = hotel.reservation
+            .Select (r => new
+            {
+                ClinetName = hotel.clients.FirstOrDefault(c => c._id == r.clientsId)?._secondName,
+                RoomsNumber = hotel.numbers.FirstOrDefault(n => n._id == r.numbersId)?._id,
+                Price = hotel.numbers.FirstOrDefault(n => n._id==r.numbersId)?._price
+            }).Where(res => res.ClinetName != null && res.RoomsNumber != null)
+            .Select(res => $"{res.ClinetName, -15}| {res.RoomsNumber, -10}| {res.Price, - 5}|").ToList();
+
+        Console.WriteLine();
+        Console.WriteLine("клиент         |id комнаты |цена  |");
+        foreach (var client in clientsWithReservation)
+        {
+            Console.WriteLine(client);
+        }
+    }
+
+    public void GetRevenueForCity(string city) // запрос на стоимость брони для клиентов проживающих в 1 городе
     {
         decimal totalCost = hotel.reservation
             .Where(r => hotel.clients.FirstOrDefault(c => c._id == r.clientsId)?._adres == city).Sum(r => hotel.numbers.FirstOrDefault(n => n._id == r.numbersId)?._price ?? 0);
@@ -333,24 +390,46 @@ public class manegerBD
         Console.WriteLine(totalCost);
     }
 
-    public void GetReservationOnClients()
+
+    public void SaveChagesInXls()
     {
-        var reservationWithClients = from res in hotel.reservation
-                                     join client in hotel.clients on res.clientsId equals client._id
-                                     select new
-                                     {
-                                         res.id,
-                                         res.ChekInData,
-                                         ClientName = client._firstName + " " + client._secondName
-                                     };
+        Workbook wb = new Workbook(PathToXlsFile);
 
-        foreach (var cl in reservationWithClients)
+        Worksheet wsClients = wb.Worksheets["Клиенты"];
+        Worksheet wsReservation = wb.Worksheets["Бронирование"];
+        Worksheet wsNumbers = wb.Worksheets["Номера"];
+
+        for(int i = 0; i < hotel.clients.Count; i++)
         {
-            Console.WriteLine(cl);
+            var client = hotel.clients[i];
+            wsClients.Cells[$"A{i + 2}"].PutValue(client._id);
+            wsClients.Cells[$"B{i + 2}"].PutValue(client._firstName);
+            wsClients.Cells[$"C{i + 2}"].PutValue(client._secondName);
+            wsClients.Cells[$"D{i + 2}"].PutValue(client._patronymic);
+            wsClients.Cells[$"E{i + 2}"].PutValue(client._adres);
         }
+
+        for(int i = 0; i < hotel.numbers.Count; i++)
+        {
+            var number = hotel.numbers[i];
+            wsNumbers.Cells[$"A{i + 2}"].PutValue(number._id);
+            wsNumbers.Cells[$"B{i + 2}"].PutValue(number._floor);
+            wsNumbers.Cells[$"C{i + 2}"].PutValue(number._numbeerOfplaces);
+            wsNumbers.Cells[$"D{i + 2}"].PutValue(number._price);
+            wsNumbers.Cells[$"E{i + 2}"].PutValue(number._category);
+        }
+
+        for(int i = 0; i < hotel.reservation.Count; i++)
+        {
+            var reservation = hotel.reservation[i];
+            wsReservation.Cells[$"A{i + 2}"].PutValue(reservation.id);
+            wsReservation.Cells[$"B{i + 2}"].PutValue(reservation.clientsId);
+            wsReservation.Cells[$"C{i + 2}"].PutValue(reservation.numbersId);
+            wsReservation.Cells[$"D{i + 2}"].PutValue(reservation.ReservationData);
+            wsReservation.Cells[$"E{i + 2}"].PutValue(reservation.ChekInData);
+            wsReservation.Cells[$"F{i + 2}"].PutValue(reservation.departureDate);
+        }
+        wb.Save(PathToXlsFile);
+
     }
-
-
-
-
 }
