@@ -82,6 +82,23 @@ public class Program
                 }
             }
 
+            meneger.GetTotalClients();
+            Console.WriteLine();
+
+            meneger.GetReservedNumbers();
+            Console.WriteLine();
+
+            meneger.GetClientsWithReservation();
+
+            Console.WriteLine("Общая стоимость брони для людей из города");
+            Console.WriteLine("Введите название города");
+            try
+            {
+                string City = Console.ReadLine();
+                meneger.GetRevenueForCity(City);
+            }catch (Exception ex) { Console.WriteLine(ex.Message); }
+
+
             Process.Start(new ProcessStartInfo
             {
                 FileName = path,
